@@ -9,7 +9,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HtmlUtil {
     private static HtmlUtil htmlUtil = new HtmlUtil();
@@ -81,5 +84,51 @@ public class HtmlUtil {
             }
         }
         return outLinks;
+    }
+
+    /**
+     * 获取符合条件的链接
+     * @param links 网页的全部链接
+     * @param isOutLinks  true：是获取外链接 ；false:是获取内链接
+     * @param patterns 链接的过滤条件，不传表示不用过滤
+     * @return 符合条件的链接集合
+     */
+    public List<String> filterLinks(List<String>links,boolean isOutLinks,String... patterns){
+       List<String> result = new ArrayList<>();
+       if(isOutLinks){
+           result = filterOutLinks(links);
+       }else {
+           for (String link : links) {
+               if (!link.startsWith("http")&&!link.startsWith("https")){
+                   result.add(link);
+               }
+           }
+       }
+       if(patterns!=null&&patterns.length>0){
+           Iterator<String> iterator = result.iterator();
+           while (iterator.hasNext()){
+               for (String reg : patterns) {
+                   //只要是不符合传入正则表达式规则的都移除
+                    if(!isPatternlink(iterator.next(),reg)){
+                        iterator.remove();
+                    }
+               }
+           }
+
+       }
+       return result;
+    }
+
+    /**
+     * 通过正则表达式获取匹配的Link
+     * @param link 目标链接
+     * @param reg  正则表达式
+     * @return true 匹配
+     */
+    public boolean isPatternlink(String link,String reg){
+        Pattern pattern = Pattern.compile(reg);
+        Matcher matcher = pattern.matcher(link);
+        return matcher.matches();
+
     }
 }
